@@ -1,6 +1,11 @@
 #include <iostream>
 
-int main()
+
+void MatMulKernel()
 {
     
+}
+int main()
+{
+
 }

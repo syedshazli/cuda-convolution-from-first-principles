@@ -15,6 +15,7 @@
  * Alt unoptimized matmul
  * Assumes tileDim = N
 */
+#define tileDim 3
 using namespace std;
  __global__ void matmul(int *a, int *b, int *c,
                                int N)
@@ -23,7 +24,7 @@ using namespace std;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     float sum = 0.0f;
     for (int i = 0; i < N; i++) {
-        sum += a[row*N+i] * b[i*N+col];
+        sum += a[row*tileDim+i] * b[i*N+col];
     }
     c[row*N+col] = sum;
 }
@@ -62,9 +63,7 @@ int main(){
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         // 4 blocks, 2 threads per block
-        // FIXME: What should N be now?
-        // FIXME: Guess: 3 since that's what we multiply by
-        matmul<<<dim3(2,2),dim3(2,1)>>> (dev_a,dev_b,dev_c, 3);
+        matmul<<<dim3(2,1),dim3(2,2)>>> (dev_a,dev_b,dev_c, 4);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 

@@ -1,8 +1,15 @@
 #include <iostream>
 #include <chrono>
 
-// host must do cuda malloc on arrays a,b, c
-// then a CUDAMEMCPY on array c
+// this is a sliding window X matmul problem
+/**
+ *  CUDA NOTES
+ *  We want to minimize data transfer between device and host
+ *  should batch small data transfers into a large data transfer
+ * 
+ *  (Don't worry for non optimized) use cudaHostAlloc for cpu memory that's accessible to device
+ * 
+ * */
 # define N 4
 using namespace std;
 
@@ -24,6 +31,21 @@ __global__ void matmul(int a[4][4], int b[4][4], int c[4][4], int N){
 	}
 
 }
+/**
+ * Alt unoptimized matmul
+ * Assumes tileDim = N
+ * __global__ void simpleMultiply(float *a, float* b, float *c,
+                               int N)
+{
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    float sum = 0.0f;
+    for (int i = 0; i < TILE_DIM; i++) {
+        sum += a[row*TILE_DIM+i] * b[i*N+col];
+    }
+    c[row*N+col] = sum;
+}
+ */
 
 int main(){
 	int a[4][4] = {

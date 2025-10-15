@@ -26,15 +26,16 @@ using namespace std;
     int filterIdx = 0;
 
     // FIXME: Reminder, N = 5
-    for (int i = 0; i < N; i+= N-1) {
+    for (int i = 0; i < N+2; i+= N+1) {
             // FIXME: 2 is hardcoded, but it's num rows
 
 
 
-            sum += image[(i+1)/2] * filter[filterIdx];
-            sum += image[(i+2)/2] * filter[filterIdx];
+            sum += image[i] * filter[filterIdx];
             filterIdx += 1;
-            //sum += image[(i/2)*tid][(i+1)/2] * filter[i];
+            sum += image[i+1] * filter[filterIdx];
+            filterIdx +=1;
+
     }
     output[tid] = sum;
 }

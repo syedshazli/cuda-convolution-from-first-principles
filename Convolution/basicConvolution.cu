@@ -1,39 +1,19 @@
 #include <iostream>
 #include <chrono>
 
-// this is a sliding window X matmul problem
-/**
- *  CUDA NOTES
- *  We want to minimize data transfer between device and host
- *  should batch small data transfers into a large data transfer
- *
- *  (Don't worry for non optimized) use cudaHostAlloc for cpu memory that's accessible to device
- *
- * */
-
-/**
- * Alt unoptimized matmul
- * Assumes tileDim = N
-*/
-#define tileDim 2
 using namespace std;
  __global__ void convolution(int *image, int *filter, int *output,
-                               int N)
+                               int N, int stride)
 {
-    //int row = blockIdx.y * blockDim.y + threadIdx.y;
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     float sum = 0.0f;
     int filterIdx = 0;
 
-    // FIXME: Reminder, N = 5
     for (int i = 0; i < N+2; i+= N+1) {
-            // FIXME: 2 is hardcoded, but it's num rows
 
-
-
-            sum += image[i] * filter[filterIdx];
+            sum += image[i+(tid*stride)] * filter[filterIdx];
             filterIdx += 1;
-            sum += image[i+1] * filter[filterIdx];
+            sum += image[i+1+(tid*stride)] * filter[filterIdx];
             filterIdx +=1;
 
     }
@@ -74,7 +54,9 @@ int main(){
         // FIXME: Fix launch parameters
         //convolution<<<2,dim3(2,2)>>> (dev_image,dev_filter,dev_output, 5);
 
-        convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 5);
+        int stride = 1;
+
+        convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 5, stride);
 
         cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost);
 

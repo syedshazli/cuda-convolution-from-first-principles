@@ -24,9 +24,9 @@ using namespace std;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     float sum = 0.0f;
     for (int i = 0; i < N; i++) {
-        sum += image[row*tileDim+i] filter[i*N+col];
+        sum += image[][(1+i)/N] filter[i*N+col];
     }
-    output[row*N+col] = sum;
+    output[threadIdx.x] = sum;
 }
 
 
@@ -59,14 +59,12 @@ int main(){
         cudaMemcpy(dev_filter,filter,sizeof(filter),cudaMemcpyHostToDevice);
         cudaMemcpy(dev_image,image,sizeof(image),cudaMemcpyHostToDevice);
 
-        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
         // FIXME: Fix launch parameters
-        convolution<<<2,dim3(2,2)>>> (dev_image,dev_filter,dev_output, 5);
+        //convolution<<<2,dim3(2,2)>>> (dev_image,dev_filter,dev_output, 5);
 
-        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 5);
 
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() << "[ns]" << std::endl;
-        // finished computation, store result in dev_c
         cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost);
 
         for(int row  = 0; row <2; row++ ){

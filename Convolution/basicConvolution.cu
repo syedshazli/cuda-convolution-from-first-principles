@@ -20,13 +20,13 @@ using namespace std;
  __global__ void convolution(int *image, int *filter, int *output,
                                int N)
 {
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    //int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
     float sum = 0.0f;
     for (int i = 0; i < N; i++) {
-        sum += image[][(1+i)/N] filter[i*N+col];
+       sum += image[(i/2)*tid][(1+i)/N] * filter[i];
     }
-    output[threadIdx.x] = sum;
+    output[tid] = sum;
 }
 
 

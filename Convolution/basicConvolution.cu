@@ -23,8 +23,18 @@ using namespace std;
     //int row = blockIdx.y * blockDim.y + threadIdx.y;
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     float sum = 0.0f;
-    for (int i = 0; i < N; i++) {
-       sum += image[(i/2)*tid][(1+i)/N] * filter[i];
+    int filterIdx = 0;
+
+    // FIXME: Reminder, N = 5
+    for (int i = 0; i < N; i+= N-1) {
+            // FIXME: 2 is hardcoded, but it's num rows
+
+
+
+            sum += image[(i+1)/2] * filter[filterIdx];
+            sum += image[(i+2)/2] * filter[filterIdx];
+            filterIdx += 1;
+            //sum += image[(i/2)*tid][(i+1)/2] * filter[i];
     }
     output[tid] = sum;
 }
@@ -67,9 +77,9 @@ int main(){
 
         cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost);
 
-        for(int row  = 0; row <2; row++ ){
+        for(int row  = 0; row <1; row++ ){
 
-           for(int col = 0; col<4; col++){//c++ XD
+           for(int col = 0; col<5; col++){//c++ XD
 
                 cout<<output[row][col]<<','<<' ';
 

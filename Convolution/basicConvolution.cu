@@ -8,7 +8,8 @@ using namespace std;
 void check(cudaError_t err, const char* const func, const char* const file,
            const int line)
 {
-    if (err != cudaSuccess)
+
+  if (err != cudaSuccess)
     {
         std::cerr << "CUDA Runtime Error at: " << file << ":" << line
                   << std::endl;
@@ -19,21 +20,37 @@ void check(cudaError_t err, const char* const func, const char* const file,
 }
 
  __global__ void convolution(int *image, int *filter, int *output,
-                               int N, int stride)
+                               int N, int filterWidth, int filterHeight)
 {
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    float sum = 0.0f;
-    int filterIdx = 0;
+    int outputCol = blockIdx.x * blockDim.x + threadIdx.x;
+    int outputRow = blockIdx.y * blockDim.y + threadIdx.y;
 
+    float sum = 0.0f;
+    //int filterIdx = 0;
+
+    /**
     for (int i = 0; i < N+2; i+= N+1) {
 
-     sum += image[i+(tid*stride)] * filter[filterIdx];
-     filterIdx += 1;
-     sum += image[i+1+(tid*stride)] * filter[filterIdx];
-     filterIdx +=1;
+      sum += image[i+(tid*stride)] * filter[filterIdx];
+      filterIdx += 1;
+      sum += image[i+1+(tid*stride)] * filter[filterIdx];
+      filterIdx +=1;
 
     }
-    output[tid] = sum;
+    */
+
+    for (int filterRow = 0; filterRow < filterWidth; filterRow++)
+    {
+     for(int filterCol = 0; filterCol < filterHeight; filterCol++)
+  {
+   int imageRow = outputCol + filterRow;
+           int imageCol = outputCol + filterCol;
+
+   sum += image[imageRow * imageCol + imageRow] * filter[filterRow * filterCol + filterRow];
+  }
+    }
+
+    output[outputRow * outputCol + outputCol] = sum;
 }
 
 
@@ -45,7 +62,7 @@ int main(){
 
          int filter[2][2] = {
         2, 1,
- 1, 0
+  1, 0
     };
 
         int output[1][5];
@@ -67,12 +84,12 @@ int main(){
         CHECK_CUDA_ERROR(cudaMemcpy(dev_image,image,sizeof(image),cudaMemcpyHostToDevice));
 
 
- // FIXME: Fix launch parameters
- //convolution<<<2,dim3(2,2)>>> (dev_image,dev_filter,dev_output, 5);
+  // FIXME: Fix launch parameters
+  //convolution<<<2,dim3(2,2)>>> (dev_image,dev_filter,dev_output, 5);
 
- int stride = 1;
+  int stride = 1;
 
- convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 5, stride);
+  convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 5, 2, 2);
 
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 

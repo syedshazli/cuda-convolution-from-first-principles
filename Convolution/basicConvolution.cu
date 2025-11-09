@@ -93,9 +93,9 @@ int main(){
 
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 
-        for(int row  = 0; row <1; row++ ){
+        for(int row  = 0; row <output.size(); row++ ){
 
-           for(int col = 0; col<5; col++){//c++ XD
+           for(int col = 0; col<output[0].size(); col++){//c++ XD
 
                 cout<<output[row][col]<<','<<' ';
 

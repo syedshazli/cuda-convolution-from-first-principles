@@ -43,8 +43,8 @@ void check(cudaError_t err, const char* const func, const char* const file,
     {
      for(int filterCol = 0; filterCol < filterHeight; filterCol++)
   {
-   int imageRow = outputCol + filterRow;
-           int imageCol = outputCol + filterCol;
+           int imageRow = outputRow*filterWidth + filterRow;
+           int imageCol = outputCol*filterHeight + filterCol;
 
    sum += image[imageRow * imageCol + imageRow] * filter[filterRow * filterCol + filterRow];
   }

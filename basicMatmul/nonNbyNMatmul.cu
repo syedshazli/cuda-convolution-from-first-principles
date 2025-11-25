@@ -58,8 +58,8 @@ int main(){
         cudaMalloc((void**) &dev_b, sizeof(b) );
 
 
-        cudaMemcpy(dev_b,b,sizeof(b),cudaMemcpyHostToDevice);
-        cudaMemcpy(dev_a,a,sizeof(a),cudaMemcpyHostToDevice);
+        cudaMemcpyAsync(dev_b,b,sizeof(b),cudaMemcpyHostToDevice);
+        cudaMemcpyAsync(dev_a,a,sizeof(a),cudaMemcpyHostToDevice);
 
         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         // 4 blocks, 2 threads per block
@@ -69,7 +69,7 @@ int main(){
 
     std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() << "[ns]" << std::endl;
         // finished computation, store result in dev_c
-        cudaMemcpy(c, dev_c, sizeof(c), cudaMemcpyDeviceToHost);
+        cudaMemcpyAsync(c, dev_c, sizeof(c), cudaMemcpyDeviceToHost);
 
         for(int row  = 0; row <2; row++ ){
 

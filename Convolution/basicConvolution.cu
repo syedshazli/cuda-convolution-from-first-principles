@@ -28,17 +28,6 @@ void check(cudaError_t err, const char* const func, const char* const file,
     float sum = 0.0f;
     //int filterIdx = 0;
 
-    /**
-    for (int i = 0; i < N+2; i+= N+1) {
-
-      sum += image[i+(tid*stride)] * filter[filterIdx];
-      filterIdx += 1;
-      sum += image[i+1+(tid*stride)] * filter[filterIdx];
-      filterIdx +=1;
-
-    }
-    */
-
     for (int filterRow = 0; filterRow < filterWidth; filterRow++)
     {
      for(int filterCol = 0; filterCol < filterHeight; filterCol++)

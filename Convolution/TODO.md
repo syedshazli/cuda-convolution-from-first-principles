@@ -1,1 +1,1 @@
-TODO: Get the indexes working for a generalized algorithm
+TODO: Clean up basicConv.cu

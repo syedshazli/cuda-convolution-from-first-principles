@@ -20,35 +20,23 @@ void check(cudaError_t err, const char* const func, const char* const file,
 }
 
  __global__ void convolution(int *image, int *filter, int *output,
-                               int N, int filterWidth, int filterHeight)
+                               int imageWidth, int filterWidth, int filterHeight)
 {
     int outputCol = blockIdx.x * blockDim.x + threadIdx.x;
     int outputRow = blockIdx.y * blockDim.y + threadIdx.y;
 
     float sum = 0.0f;
-    //int filterIdx = 0;
 
-    /**
-    for (int i = 0; i < N+2; i+= N+1) {
-
-      sum += image[i+(tid*stride)] * filter[filterIdx];
-      filterIdx += 1;
-      sum += image[i+1+(tid*stride)] * filter[filterIdx];
-      filterIdx +=1;
-
-    }
-    */
 
     for (int filterRow = 0; filterRow < filterHeight; filterRow++)
     {
      for(int filterCol = 0; filterCol < filterWidth; filterCol++)
   {
-   int imageRow = outputRow + filterRow;
+    int imageRow = outputRow + filterRow;
            int imageCol = outputCol + filterCol;
 
-   // Actually, it is the length of the image, not N+1. N+1 is just convenient with filter size
-   // TODO: Replace N+1 with filterSize
-   sum += image[filterRow*(N+1) + outputCol + filterCol] * filter[filterRow * filterWidth + filterCol];
+ 
+   sum += image[filterRow*imageWidth+ + outputCol + filterCol] * filter[filterRow * filterWidth + filterCol];
   }
     }
 
@@ -91,7 +79,7 @@ int main(){
 
   int stride = 1;
 
-  convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 5, 2, 2);
+  convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 6, 2, 2);
 
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 

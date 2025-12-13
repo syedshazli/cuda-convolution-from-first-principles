@@ -45,14 +45,15 @@ void check(cudaError_t err, const char* const func, const char* const file,
 
 
 int main(){
-        int image[2][6] = {
+        int image[3][6] = {
         0, 2, 4, 6, 8, 10,
-        3, 5, 7, 9, 11, 13
+        3, 5, 7, 9, 11, 13,
+        15, 17, 19, 21, 23
     };
 
          int filter[2][2] = {
         2, 1,
-  1, 0
+        1, 0
     };
 
         int output[1][5];

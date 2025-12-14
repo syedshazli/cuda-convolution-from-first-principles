@@ -75,18 +75,18 @@ int main(){
         CHECK_CUDA_ERROR(cudaMemcpy(dev_image,image,sizeof(image),cudaMemcpyHostToDevice));
 
 
-  // FIXME: Fix launch parameters
-  //convolution<<<2,dim3(2,2)>>> (dev_image,dev_filter,dev_output, 5);
-
   int stride = 1;
 
   convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 6, 2, 2);
 
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 
-        for(int row  = 0; row <1; row++ ){
+        int rowSize = sizeof(output)/sizeof(output[0]);
+        int colSize = sizeof(output[0])/sizeof(output[0][0])
 
-           for(int col = 0; col<5; col++){//c++ XD
+        for(int row  = 0; row <rowSize; row++ ){
+
+           for(int col = 0; col<colSize; col++){
 
                 cout<<output[row][col]<<','<<' ';
 

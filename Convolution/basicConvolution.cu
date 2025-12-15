@@ -59,6 +59,8 @@ int main(){
         int filterLength = sizeof(filter)/sizeof(filter[0]);
         int filterWidth = sizeof(filter[0])/sizeof(filter[0][0]);
 
+        int imageWidth = sizeof(filter[0])/sizeof(filter[0][0]);
+
         int output[1][5];
 
         int (*dev_output);// points to the first row of the array
@@ -79,8 +81,9 @@ int main(){
 
 
   int stride = 1;
+
   
-  convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, 6, filterLength, filterWidth);
+  convolution<<<1, 5>>> (dev_image,dev_filter,dev_output, imageWidth, filterLength, filterWidth);
 
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 

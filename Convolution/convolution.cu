@@ -43,23 +43,22 @@ void check(cudaError_t err, const char* const func, const char* const file,
 
 
 int main(){
-        int image[3][6] = {
+        int image[2][6] = {
         0, 2, 4, 6, 8, 10,
         3, 5, 7, 9, 11,13,
-        1, 2, 4, 7, 9, 12,
     };
-        
+
 
          int filter[2][2] = {
         2, 1,
         1, 0
     };
 
-        int output[2][5];
-        int filterLength = sizeof(filter)/sizeof(filter[0]);
+        int output[1][5];
+        int filterHeight = sizeof(filter)/sizeof(filter[0]);
         int filterWidth = sizeof(filter[0])/sizeof(filter[0][0]);
 
-        int imageWidth = sizeof(filter[0])/sizeof(filter[0][0]);
+        int imageWidth = sizeof(image[0])/sizeof(image[0][0]);
 
         int (*dev_output);// points to the first row of the array
 
@@ -80,9 +79,9 @@ int main(){
 
 
         int stride = 1;
-        dim3 threads(5,2);
-       
-        convolution<<<1, threads>>> (dev_image,dev_filter,dev_output, imageWidth, filterLength, filterWidth);
+        dim3 threadsPerBlock(5,1);
+        dim3 numBlocks(1);
+        convolution<<<numBlocks, threadsPerBlock>>> (dev_image,dev_filter,dev_output, imageWidth, filterWidth, filterHeight);
 
         // copy the data that was written to in the kernel back to the host
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));

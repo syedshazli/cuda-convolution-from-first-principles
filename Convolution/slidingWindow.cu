@@ -23,11 +23,10 @@ using namespace std;
 
 
 int main(){
-        int image[4][6] = {
+        int image[3][6] = {
         0, 2, 4, 6, 8, 10,
         3, 5, 7, 9, 11,13,
         1, 2, 4, 7, 9, 12,
-        5, 10, 15, 3, 8, 2
     };
 
          int filter[2][2] = {

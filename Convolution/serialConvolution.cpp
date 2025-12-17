@@ -11,6 +11,7 @@
 //             window = input[row: row + kernel_shape, col: col + kernel_shape]
 //             result[row, col] = np.sum(np.multiply(kernel,window))
 //     return result + bias
+// is a quadrupled nested for loop serially!
 void MatMulKernel()
 {
     

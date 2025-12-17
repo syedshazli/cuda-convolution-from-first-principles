@@ -62,7 +62,7 @@ int main(){
         int imageWidth = sizeof(filter[0])/sizeof(filter[0][0]);
 
         // TODO: Find out expected output.. and figure out if output dims are fine this way
-        int output[1][10];
+        int output[2][5];
 
         int (*dev_output);// points to the first row of the array
 

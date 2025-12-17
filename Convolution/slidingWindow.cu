@@ -4,29 +4,32 @@
 
 using namespace std;
  __global__ void slidingWindow(int *image, int *filter, int *output,
-                               int N, int stride)
+                               int imageWidth, int filterWidth, int filterHeight)
 {
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int outputCol = blockIdx.x * blockDim.x + threadIdx.x;
+    int outputRow = blockIdx.y * blockDim.y + threadIdx.y;
+
     float sum = 0.0f;
-    int filterIdx = 0;
 
-    for (int i = 0; i < N+2; i+= N+1) {
+    for (int filterRow = 0; filterRow < filterHeight; filterRow++)
+    {
+        for(int filterCol = 0; filterCol < filterWidth; filterCol++)
+        {
+                int imageRow = outputRow + filterRow;
+                int imageCol = outputCol + filterCol;
 
-            sum += image[i+(tid*stride)] * filter[filterIdx];
-            filterIdx += 1;
-            sum += image[i+1+(tid*stride)] * filter[filterIdx];
-            filterIdx +=1;
-
+                sum += image[filterRow*imageWidth + outputCol + filterCol] * filter[filterRow * filterWidth + filterCol];
+        }
     }
-    output[tid] = sum;
+
+    output[outputRow * outputCol + outputCol] = sum;
 }
 
 
 int main(){
-        int image[3][6] = {
+        int image[2][6] = {
         0, 2, 4, 6, 8, 10,
-        3, 5, 7, 9, 11,13,
-        1, 2, 4, 7, 9, 12,
+        3, 5, 7, 9, 11, 13
     };
 
          int filter[2][2] = {
@@ -45,6 +48,7 @@ int main(){
 
         int(*dev_filter);
 
+        
         cudaMalloc( (void**) &dev_image, sizeof(image)  );
         cudaMalloc((void**) &dev_filter, sizeof(filter) );
 
@@ -55,7 +59,12 @@ int main(){
 
         int stride = 1;
 
-        slidingWindow<<<1, 5>>> (dev_image,dev_filter,dev_output, 5, stride);
+        int filterLength = sizeof(filter)/sizeof(filter[0]);
+        int filterWidth = sizeof(filter[0])/sizeof(filter[0][0]);
+
+        int imageWidth = sizeof(filter[0])/sizeof(filter[0][0]);
+
+        slidingWindow<<<1, 5>>> (dev_image,dev_filter,dev_output, imageWidth, filterLength, filterWidth);
 
         cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost);
 

@@ -43,10 +43,12 @@ void check(cudaError_t err, const char* const func, const char* const file,
 
 
 int main(){
-        int image[2][6] = {
+        int image[3][6] = {
         0, 2, 4, 6, 8, 10,
-        3, 5, 7, 9, 11, 13
+        3, 5, 7, 9, 11,13,
+        1, 2, 4, 7, 9, 12,
     };
+        
 
          int filter[2][2] = {
         2, 1,
@@ -54,11 +56,15 @@ int main(){
     };
 
         int output[2][5];
+        int filterLength = sizeof(filter)/sizeof(filter[0]);
+        int filterWidth = sizeof(filter[0])/sizeof(filter[0][0]);
+
+        int imageWidth = sizeof(filter[0])/sizeof(filter[0][0]);
 
         int (*dev_output);// points to the first row of the array
 
-        // allocate with CUDA MALLOC
-        cudaMalloc( (void**) &dev_output, sizeof(output));
+        // allocate the proper amount of memory for output and inputs
+        CHECK_CUDA_ERROR(cudaMalloc( (void**) &dev_output, sizeof(output)));
 
         int(*dev_image);
 
@@ -68,20 +74,25 @@ int main(){
         CHECK_CUDA_ERROR(cudaMalloc((void**) &dev_filter, sizeof(filter)));
 
 
+        // copy the data contained in the image and filter so we can access such data in the kernel
         CHECK_CUDA_ERROR(cudaMemcpy(dev_filter,filter,sizeof(filter),cudaMemcpyHostToDevice));
         CHECK_CUDA_ERROR(cudaMemcpy(dev_image,image,sizeof(image),cudaMemcpyHostToDevice));
 
 
         int stride = 1;
         dim3 threads(5,2);
-        // FIXME: REMOVE HARCODED PARAMS
-        convolution<<<1, threads>>> (dev_image,dev_filter,dev_output, 6, 2, 2);
+       
+        convolution<<<1, threads>>> (dev_image,dev_filter,dev_output, imageWidth, filterLength, filterWidth);
 
+        // copy the data that was written to in the kernel back to the host
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 
-        for(int row  = 0; row <2; row++ ){
+        int outputLength = sizeof(output)/sizeof(output[0]);
+        int outputWidth = sizeof(output[0])/sizeof(output[0][0]);
 
-           for(int col = 0; col<5; col++){//c++ XD
+        for(int row  = 0; row <outputLength; row++ ){
+
+           for(int col = 0; col<outputWidth; col++){//c++ XD
 
                 cout<<output[row][col]<<','<<' ';
 

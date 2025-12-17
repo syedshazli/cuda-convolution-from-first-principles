@@ -9,7 +9,7 @@ void check(cudaError_t err, const char* const func, const char* const file,
            const int line)
 {
 
-  if (err != cudaSuccess)
+        if (err != cudaSuccess)
     {
         std::cerr << "CUDA Runtime Error at: " << file << ":" << line
                   << std::endl;
@@ -27,17 +27,15 @@ void check(cudaError_t err, const char* const func, const char* const file,
 
     float sum = 0.0f;
 
-
     for (int filterRow = 0; filterRow < filterHeight; filterRow++)
     {
-     for(int filterCol = 0; filterCol < filterWidth; filterCol++)
-  {
-    int imageRow = outputRow + filterRow;
-           int imageCol = outputCol + filterCol;
+        for(int filterCol = 0; filterCol < filterWidth; filterCol++)
+        {
+                int imageRow = outputRow + filterRow;
+                int imageCol = outputCol + filterCol;
 
- 
-   sum += image[filterRow*imageWidth+ + outputCol + filterCol] * filter[filterRow * filterWidth + filterCol];
-  }
+                sum += image[filterRow*imageWidth + outputCol + filterCol] * filter[filterRow * filterWidth + filterCol];
+        }
     }
 
     output[outputRow * outputCol + outputCol] = sum;
@@ -45,10 +43,9 @@ void check(cudaError_t err, const char* const func, const char* const file,
 
 
 int main(){
-        int image[3][6] = {
+        int image[2][6] = {
         0, 2, 4, 6, 8, 10,
-        3, 5, 7, 9, 11, 13,
-        5, 7, 9, 2, 23, 10
+        3, 5, 7, 9, 11, 13
     };
 
          int filter[2][2] = {
@@ -56,12 +53,6 @@ int main(){
         1, 0
     };
 
-        int filterLength = sizeof(filter)/sizeof(filter[0]);
-        int filterWidth = sizeof(filter[0])/sizeof(filter[0][0]);
-
-        int imageWidth = sizeof(filter[0])/sizeof(filter[0][0]);
-
-        // TODO: Find out expected output.. and figure out if output dims are fine this way
         int output[2][5];
 
         int (*dev_output);// points to the first row of the array
@@ -81,19 +72,15 @@ int main(){
         CHECK_CUDA_ERROR(cudaMemcpy(dev_image,image,sizeof(image),cudaMemcpyHostToDevice));
 
 
-  int stride = 1;
-
-  
-  convolution<<<1, 10>>> (dev_image,dev_filter,dev_output, imageWidth, filterLength, filterWidth);
+        int stride = 1;
+        dim3 threads(5,2);
+        convolution<<<1, threads>>> (dev_image,dev_filter,dev_output, 6, 2, 2);
 
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 
-        int rowSize = sizeof(output)/sizeof(output[0]);
-        int colSize = sizeof(output[0])/sizeof(output[0][0])
+        for(int row  = 0; row <1; row++ ){
 
-        for(int row  = 0; row <rowSize; row++ ){
-
-           for(int col = 0; col<colSize; col++){
+           for(int col = 0; col<5; col++){//c++ XD
 
                 cout<<output[row][col]<<','<<' ';
 

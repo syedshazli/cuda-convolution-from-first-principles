@@ -43,10 +43,11 @@ void check(cudaError_t err, const char* const func, const char* const file,
 
 
 int main(){
-        int image[2][6] = {
+        int image[3][6] = {
         0, 2, 4, 6, 8, 10,
         3, 5, 7, 9, 11,13,
-    };
+        1, 2, 4, 7, 9, 12,
+        };
 
 
          int filter[2][2] = {
@@ -54,7 +55,7 @@ int main(){
         1, 0
     };
 
-        int output[1][5];
+        int output[2][5];
         int filterHeight = sizeof(filter)/sizeof(filter[0]);
         int filterWidth = sizeof(filter[0])/sizeof(filter[0][0]);
 
@@ -79,7 +80,7 @@ int main(){
 
 
         int stride = 1;
-        dim3 threadsPerBlock(5,1);
+        dim3 threadsPerBlock(5,2);
         dim3 numBlocks(1);
         convolution<<<numBlocks, threadsPerBlock>>> (dev_image,dev_filter,dev_output, imageWidth, filterWidth, filterHeight);
 

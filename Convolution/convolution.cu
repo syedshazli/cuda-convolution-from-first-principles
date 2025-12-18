@@ -20,12 +20,12 @@ void check(cudaError_t err, const char* const func, const char* const file,
 }
 
  __global__ void convolution(int *image, int *filter, int *output,
-                               int imageWidth, int filterWidth, int filterHeight)
+                               int imageWidth, int filterWidth, int filterHeight, int outputWidth)
 {
     int outputCol = blockIdx.x * blockDim.x + threadIdx.x;
     int outputRow = blockIdx.y * blockDim.y + threadIdx.y;
 
-    float sum = 0.0f;
+    int sum = 0;
 
     for (int filterRow = 0; filterRow < filterHeight; filterRow++)
     {
@@ -33,13 +33,21 @@ void check(cudaError_t err, const char* const func, const char* const file,
         {
                 int imageRow = outputRow + filterRow;
                 int imageCol = outputCol + filterCol;
-
-                sum += image[filterRow*imageWidth + imageCol + outputRow*(imageWidth)] * filter[filterRow * filterWidth + filterCol];
+                // imageRow * imageWidth + imageCol is equal to:
+                // filterRow*imageWidth + imageCol + outputRow*(imageWidth)
+                /**
+                 * Derivation:
+                                * filterRow*imageWidth + outputRow*imageWidth + imageCol
+                                *
+                                * take imageWidth common, equal to imageWidth(filterRow+outputRow) + imageCol
+                                * You can get the image row from adding filterRow and outputRow, so final version is imageWidth * imageRow + imageCol
+                 */
+                sum += image[imageRow * imageWidth + imageCol] * filter[filterRow * filterWidth + filterCol];
         }
     }
 
     // TODO: ImageWidth-1 is probably a hack. It is meant to be width of output
-    output[outputRow * (imageWidth-1) + outputCol] = sum;
+    output[outputRow * outputWidth + outputCol] = sum;
 }
 
 
@@ -71,6 +79,10 @@ int main(){
 
         int(*dev_filter);
 
+
+        int outputLength = sizeof(output)/sizeof(output[0]);
+        int outputWidth = sizeof(output[0])/sizeof(output[0][0]);
+
         CHECK_CUDA_ERROR(cudaMalloc( (void**) &dev_image, sizeof(image)));
         CHECK_CUDA_ERROR(cudaMalloc((void**) &dev_filter, sizeof(filter)));
 
@@ -82,13 +94,11 @@ int main(){
 
         dim3 threadsPerBlock(5,2);
         dim3 numBlocks(1);
-        convolution<<<numBlocks, threadsPerBlock>>> (dev_image,dev_filter,dev_output, imageWidth, filterWidth, filterHeight);
+        convolution<<<numBlocks, threadsPerBlock>>> (dev_image,dev_filter,dev_output, imageWidth, filterWidth, filterHeight, outputWidth);
 
         // copy the data that was written to in the kernel back to the host
         CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
 
-        int outputLength = sizeof(output)/sizeof(output[0]);
-        int outputWidth = sizeof(output[0])/sizeof(output[0][0]);
 
         for(int row  = 0; row <outputLength; row++ ){
 

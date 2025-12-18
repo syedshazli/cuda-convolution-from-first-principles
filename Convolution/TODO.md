@@ -1,3 +1,4 @@
 TODO: 
-1: Account for launching in the Y-direction. See if the kernel works (likely wont)
-^^^ BREAK DOWN THE ABOVE INTO SMALLER STEPS
+    1. Do performance testing cpu vs. gpu
+    2. Test for larger and larger input sizes
+    3. Get a mathematical formula out of this

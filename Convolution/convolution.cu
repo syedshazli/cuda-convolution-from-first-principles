@@ -34,11 +34,12 @@ void check(cudaError_t err, const char* const func, const char* const file,
                 int imageRow = outputRow + filterRow;
                 int imageCol = outputCol + filterCol;
 
-                sum += image[filterRow*imageWidth + outputCol + filterCol] * filter[filterRow * filterWidth + filterCol];
+                sum += image[filterRow*imageWidth + imageCol + outputRow*(imageWidth-1)] * filter[filterRow * filterWidth + filterCol];
         }
     }
 
-    output[outputRow * outputCol + outputCol] = sum;
+    // TODO: ImageWidth-1 is probably a hack. It is meant to be width of output
+    output[outputRow * (imageWidth-1) + outputCol] = sum;
 }
 
 
@@ -79,7 +80,6 @@ int main(){
         CHECK_CUDA_ERROR(cudaMemcpy(dev_image,image,sizeof(image),cudaMemcpyHostToDevice));
 
 
-        int stride = 1;
         dim3 threadsPerBlock(5,2);
         dim3 numBlocks(1);
         convolution<<<numBlocks, threadsPerBlock>>> (dev_image,dev_filter,dev_output, imageWidth, filterWidth, filterHeight);

@@ -46,7 +46,6 @@ void check(cudaError_t err, const char* const func, const char* const file,
         }
     }
 
-    // TODO: ImageWidth-1 is probably a hack. It is meant to be width of output
     output[outputRow * outputWidth + outputCol] = sum;
 }
 

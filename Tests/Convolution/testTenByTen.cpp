@@ -26,10 +26,18 @@ void convolution_cpu(int *image, int *filter, int *output,
 int main()
 {
 
-    int image[3][6] = {
-        0, 2, 4, 6, 8, 10,
-        3, 5, 7, 9, 11,13,
-        1, 2, 4, 7, 9, 12,
+    int image[10][10] = {
+
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
+        0, 2, 4, 6, 8, 10, 2, 8, 9, 10,
         };
 
 
@@ -39,7 +47,7 @@ int main()
     };
 
     // TODO: Is this the right dimension?
-    int output[1][5];
+    int output[9][9];
     int filterHeight = sizeof(filter)/sizeof(filter[0]);        
     int filterWidth = sizeof(filter[0])/sizeof(filter[0][0]);
 

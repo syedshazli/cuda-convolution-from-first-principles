@@ -1,0 +1,162 @@
+#include <iostream>
+#include <chrono>
+#include <cuda_runtime.h>
+
+void convolution_cpu(int *image, int *filter, int *output,
+                     int imageWidth, int imageHeight,
+                     int filterWidth, int filterHeight)
+{
+    int outputWidth = imageWidth - filterWidth + 1;
+    int outputHeight = imageHeight - filterHeight + 1;
+    src / Convolution / convolution.cu for (int outRow = 0; outRow < outputHeight; outRow++)
+    {
+        for (int outCol = 0; outCol < outputWidth; outCol++)
+        {
+            int sum = 0;
+            for (int fRow = 0; fRow < filterHeight; fRow++)
+            {
+                for (int fCol = 0; fCol < filterWidth; fCol++)
+                {
+                    int imgRow = outRow + fRow;
+                    int imgCol = outCol + fCol;
+                    sum += image[imgRow * imageWidth + imgCol] *
+                           filter[fRow * filterWidth + fCol];
+                }
+            }
+            output[outRow * outputWidth + outCol] = sum;
+        }
+    }
+}
+
+#define CHECK_CUDA_ERROR(val) check((val), #val, __FILE__, __LINE__)
+void check(cudaError_t err, const char *const func, const char *const file,
+           const int line)
+{
+
+    if (err != cudaSuccess)
+    {
+        std::cerr << "CUDA Runtime Error at: " << file << ":" << line
+                  << std::endl;
+        std::cerr << cudaGetErrorString(err) << " " << func << std::endl;
+        // We don't exit when we encounter CUDA errors in this example.
+        // std::exit(EXIT_FAILURE);
+    }
+}
+
+__global__ void convolution(int *image, int *filter, int *output,
+                            int imageWidth, int filterWidth, int filterHeight, int outputWidth)
+{
+    int outputCol = blockIdx.x * blockDim.x + threadIdx.x;
+    int outputRow = blockIdx.y * blockDim.y + threadIdx.y;
+
+    int sum = 0;
+
+    for (int filterRow = 0; filterRow < filterHeight; filterRow++)
+    {
+        for (int filterCol = 0; filterCol < filterWidth; filterCol++)
+        {
+            int imageRow = outputRow + filterRow;
+            int imageCol = outputCol + filterCol;
+            // imageRow * imageWidth + imageCol is equal to:
+            // filterRow*imageWidth + imageCol + outputRow*(imageWidth)
+            /**
+             * Derivation:
+             * filterRow*imageWidth + outputRow*imageWidth + imageCol
+             *
+             * take imageWidth common, equal to imageWidth(filterRow+outputRow) + imageCol
+             * You can get the image row from adding filterRow and outputRow, so final version is imageWidth * imageRow + imageCol
+             */
+            sum += image[imageRow * imageWidth + imageCol] * filter[filterRow * filterWidth + filterCol];
+        }
+    }
+
+    output[outputRow * outputWidth + outputCol] = sum;
+}
+
+int main()
+{
+
+    int image[10][10] = {
+
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10,
+
+    };
+
+    int filter[2][2] = {
+        2, 1,
+        1, 0};
+
+    int output[9][9];
+    int filterHeight = sizeof(filter) / sizeof(filter[0]);
+    int filterWidth = sizeof(filter[0]) / sizeof(filter[0][0]);
+
+    int imageWidth = sizeof(image[0]) / sizeof(image[0][0]);
+    int imageHeight = sizeof(image) / sizeof(image[0]);
+
+    int outputLength = sizeof(output) / sizeof(output[0]);
+    int outputWidth = sizeof(output[0]) / sizeof(output[0][0]);
+
+    int(*dev_output); // points to the first row of the array
+
+    // allocate the proper amount of memory for output and inputs
+    CHECK_CUDA_ERROR(cudaMalloc((void **)&dev_output, sizeof(output)));
+
+    int(*dev_image);
+    int(*dev_filter);
+
+    CHECK_CUDA_ERROR(cudaMalloc((void **)&dev_image, sizeof(image)));
+    CHECK_CUDA_ERROR(cudaMalloc((void **)&dev_filter, sizeof(filter)));
+
+    // copy the data contained in the image and filter so we can access such data in the kernel
+    CHECK_CUDA_ERROR(cudaMemcpy(dev_filter, filter, sizeof(filter), cudaMemcpyHostToDevice));
+    CHECK_CUDA_ERROR(cudaMemcpy(dev_image, image, sizeof(image), cudaMemcpyHostToDevice));
+
+    dim3 threadsPerBlock(5, 2);
+    dim3 numBlocks(1);
+    convolution<<<numBlocks, threadsPerBlock>>>(dev_image, dev_filter, dev_output, imageWidth, filterWidth, filterHeight, outputWidth);
+
+    // copy the data that was written to in the kernel back to the host
+    CHECK_CUDA_ERROR(cudaMemcpy(output, dev_output, sizeof(output), cudaMemcpyDeviceToHost));
+
+    int imageCPU[1000][1000] = {
+// TODO: THIS IS ONLY 2 x 1000 rn
+        0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,
+        0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10, 0,2,4, 6,8,10, 2, 8, 9,10,
+        
+    };
+    int filterCPU[5][5] = {
+        2, 1, 2, 4, 1,
+        1, 0, 2, 3, 0,
+        1, 0, 2, 3, 0,
+        2, 1, 2, 4, 1,
+        2, 1, 2, 4, 1,
+    };
+
+    int outputCPU[996][996];
+    convolution_cpu((int *)imageCPU, (int *)filterCPU, (int *)outputCPU, imageWidth, imageHeight, filterWidth, filterHeight);
+
+    for (int row = 0; row < outputLength; row++)
+    {
+
+        for (int col = 0; col < outputWidth; col++)
+        { // c++ XD
+
+            std::cout << output[row][col] << ',' << ' ';
+            if(outputCPU[row][col] != output[row][col])
+            {
+                std::cout<<"ERROR ENCOUNTERED HERE. ABORT \n";
+                break;
+            }
+        }
+        std::cout << std::endl;
+    }
+}

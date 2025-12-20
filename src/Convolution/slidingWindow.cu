@@ -1,4 +1,4 @@
-// This file shows what slidingWindow looks like with a filter that has to go down multiple rows (Reaches end of some rows and moves down to the rest)
+// This file shows what slidingWindow looks like with a filter that does not slide down any rows (Reaches end of some rows and moves down to the rest)
 #include <iostream>
 #include <chrono>
 

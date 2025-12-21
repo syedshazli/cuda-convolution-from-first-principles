@@ -91,9 +91,13 @@ int main()
 
     };
 
-    int filter[2][2] = {
-        2, 1,
-        1, 0};
+    int filter[5][5] = {
+        2, 1, 2, 4, 1,
+        1, 0, 2, 3, 0,
+        1, 0, 2, 3, 0,
+        2, 1, 2, 4, 1,
+        2, 1, 2, 4, 1,
+    };
 
     int output[9][9];
     int filterHeight = sizeof(filter) / sizeof(filter[0]);

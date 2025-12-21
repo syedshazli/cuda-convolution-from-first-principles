@@ -188,7 +188,7 @@ int main()
         2, 1, 2, 4, 1,
     };
 
-    int output[9][9];
+    int output[96][96];
     int filterHeight = sizeof(filter) / sizeof(filter[0]);
     int filterWidth = sizeof(filter[0]) / sizeof(filter[0][0]);
 

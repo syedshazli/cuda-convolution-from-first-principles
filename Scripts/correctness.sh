@@ -1,0 +1,1 @@
+# bash script to run all tests fir correctnessvabd check if output is correct.

@@ -73,7 +73,6 @@ __global__ void convolution(int *image, int *filter, int *output,
 
         output[outputRow * outputWidth + outputCol] = sum;
     }
-    __syncthreads();
 }
 int main()
 {

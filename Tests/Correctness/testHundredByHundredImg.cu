@@ -44,35 +44,36 @@ void check(cudaError_t err, const char *const func, const char *const file,
 }
 
 __global__ void convolution(int *image, int *filter, int *output,
-                            int imageWidth, int filterWidth, int filterHeight, int outputWidth)
+                            int imageWidth, int filterWidth, int filterHeight, int outputWidth, int outputLength)
 {
     int outputCol = blockIdx.x * blockDim.x + threadIdx.x;
     int outputRow = blockIdx.y * blockDim.y + threadIdx.y;
 
     int sum = 0;
-
-    for (int filterRow = 0; filterRow < filterHeight; filterRow++)
+    if (outputCol < outputWidth && outputRow < outputLength)
     {
-        for (int filterCol = 0; filterCol < filterWidth; filterCol++)
+        for (int filterRow = 0; filterRow < filterHeight; filterRow++)
         {
-            int imageRow = outputRow + filterRow;
-            int imageCol = outputCol + filterCol;
-            // imageRow * imageWidth + imageCol is equal to:
-            // filterRow*imageWidth + imageCol + outputRow*(imageWidth)
-            /**
-             * Derivation:
-             * filterRow*imageWidth + outputRow*imageWidth + imageCol
-             *
-             * take imageWidth common, equal to imageWidth(filterRow+outputRow) + imageCol
-             * You can get the image row from adding filterRow and outputRow, so final version is imageWidth * imageRow + imageCol
-             */
-            sum += image[imageRow * imageWidth + imageCol] * filter[filterRow * filterWidth + filterCol];
+            for (int filterCol = 0; filterCol < filterWidth; filterCol++)
+            {
+                int imageRow = outputRow + filterRow;
+                int imageCol = outputCol + filterCol;
+                // imageRow * imageWidth + imageCol is equal to:
+                // filterRow*imageWidth + imageCol + outputRow*(imageWidth)
+                /**
+                 * Derivation:
+                 * filterRow*imageWidth + outputRow*imageWidth + imageCol
+                 *
+                 * take imageWidth common, equal to imageWidth(filterRow+outputRow) + imageCol
+                 * You can get the image row from adding filterRow and outputRow, so final version is imageWidth * imageRow + imageCol
+                 */
+                sum += image[imageRow * imageWidth + imageCol] * filter[filterRow * filterWidth + filterCol];
+            }
         }
+
+        output[outputRow * outputWidth + outputCol] = sum;
     }
-
-    output[outputRow * outputWidth + outputCol] = sum;
 }
-
 int main()
 {
 

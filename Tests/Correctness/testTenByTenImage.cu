@@ -123,7 +123,7 @@ int main()
     int threadsX = 16;
     int threadsY = 16;
     dim3 threadsPerBlock(threadsX, threadsY);
-    dim3 numBlocks( (imageWidth+threadsX-1)/threadsX, (imageHeight+threadsY-1)/threadsY );
+    dim3 numBlocks( (outputWidth+threadsX-1)/threadsX, (outputHeight+threadsY-1)/threadsY );
     convolution<<<numBlocks, threadsPerBlock>>>(dev_image, dev_filter, dev_output, imageWidth, filterWidth, filterHeight, outputWidth);
 
     // copy the data that was written to in the kernel back to the host

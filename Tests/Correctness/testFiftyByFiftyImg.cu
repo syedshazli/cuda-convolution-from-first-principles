@@ -163,9 +163,10 @@ int main()
     // copy the data contained in the image and filter so we can access such data in the kernel
     CHECK_CUDA_ERROR(cudaMemcpy(dev_filter, filter, sizeof(filter), cudaMemcpyHostToDevice));
     CHECK_CUDA_ERROR(cudaMemcpy(dev_image, image, sizeof(image), cudaMemcpyHostToDevice));
-
-    dim3 threadsPerBlock(outputWidth, outputLength);
-    dim3 numBlocks(1);
+    int threadsX = 16;
+    int threadsY = 16;
+    dim3 threadsPerBlock(threadsX, threadsY);
+    dim3 numBlocks( (imageWidth+threadsX-1)/threadsX, (imageHeight+threadsY-1)/threadsY );
     convolution<<<numBlocks, threadsPerBlock>>>(dev_image, dev_filter, dev_output, imageWidth, filterWidth, filterHeight, outputWidth);
 
     // copy the data that was written to in the kernel back to the host

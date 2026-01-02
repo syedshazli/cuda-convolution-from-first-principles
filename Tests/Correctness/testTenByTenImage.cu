@@ -120,7 +120,7 @@ int main()
     CHECK_CUDA_ERROR(cudaMemcpy(dev_filter, filter, sizeof(filter), cudaMemcpyHostToDevice));
     CHECK_CUDA_ERROR(cudaMemcpy(dev_image, image, sizeof(image), cudaMemcpyHostToDevice));
 
-    dim3 threadsPerBlock(outputWidth, outputLength);
+    dim3 threadsPerBlock(16,16);
     dim3 numBlocks(1);
     convolution<<<numBlocks, threadsPerBlock>>>(dev_image, dev_filter, dev_output, imageWidth, filterWidth, filterHeight, outputWidth);
 

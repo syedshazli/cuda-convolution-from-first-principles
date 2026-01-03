@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <cassert>
 #include <cuda_runtime.h>
 
 void convolution_cpu(int *image, int *filter, int *output,
@@ -246,11 +247,7 @@ int main()
         { // c++ XD
 
             std::cout << output[row][col] << ',' << ' ';
-            if(outputCPU[row][col] != output[row][col])
-            {
-                std::cout<<"ERROR ENCOUNTERED HERE. ABORT \n";
-                break;
-            }
+            assert(outputCPU[row][col] == output[row][col]);
         }
         std::cout << std::endl;
     }

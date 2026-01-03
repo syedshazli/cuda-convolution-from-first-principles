@@ -1,7 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <cuda_runtime.h>
-#include <stdexcept>
+#include <cassert>
 
 void convolution_cpu(int *image, int *filter, int *output,
                      int imageWidth, int imageHeight,

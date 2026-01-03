@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cuda_runtime.h>
 
-
 void convolution_cpu(int *image, int *filter, int *output,
                      int imageWidth, int imageHeight,
                      int filterWidth, int filterHeight)

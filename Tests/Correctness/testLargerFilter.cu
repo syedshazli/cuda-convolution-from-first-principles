@@ -9,7 +9,7 @@ void convolution_cpu(int *image, int *filter, int *output,
 {
     int outputWidth = imageWidth - filterWidth + 1;
     int outputHeight = imageHeight - filterHeight + 1;
-    src / Convolution / convolution.cu for (int outRow = 0; outRow < outputHeight; outRow++)
+    for (int outRow = 0; outRow < outputHeight; outRow++)
     {
         for (int outCol = 0; outCol < outputWidth; outCol++)
         {

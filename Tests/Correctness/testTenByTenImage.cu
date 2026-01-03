@@ -159,11 +159,7 @@ int main()
         { // c++ XD
 
             std::cout << output[row][col] << ',' << ' ';
-            if(outputCPU[row][col] != output[row][col])
-            {
-                std::cout<<"ERROR ENCOUNTERED HERE. ABORT \n";
-                break;
-            }
+            assert(outputCPU[row][col] == output[row][col]);
         }
         std::cout << std::endl;
     }

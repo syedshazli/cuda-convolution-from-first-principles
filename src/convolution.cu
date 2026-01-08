@@ -33,15 +33,7 @@ if (outputCol < outputWidth && outputRow < outputLength){
         {
                 int imageRow = outputRow + filterRow;
                 int imageCol = outputCol + filterCol;
-                // imageRow * imageWidth + imageCol is equal to:
-                // filterRow*imageWidth + imageCol + outputRow*(imageWidth)
-                /**
-                 * Derivation:
-                                * filterRow*imageWidth + outputRow*imageWidth + imageCol
-                                *
-                                * take imageWidth common, equal to imageWidth(filterRow+outputRow) + imageCol
-                                * You can get the image row from adding filterRow and outputRow, so final version is imageWidth * imageRow + imageCol
-                 */
+
                 sum += image[imageRow * imageWidth + imageCol] * filter[filterRow * filterWidth + filterCol];
         }
     }

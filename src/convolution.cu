@@ -20,7 +20,7 @@ void check(cudaError_t err, const char* const func, const char* const file,
 }
 
  __global__ void convolution(int *image, int *filter, int *output,
-                               int imageWidth, int filterWidth, int filterHeight, int outputWidth)
+                               int imageWidth, int filterWidth, int filterHeight, int outputWidth, int outputLength)
 {
     int outputCol = blockIdx.x * blockDim.x + threadIdx.x;
     int outputRow = blockIdx.y * blockDim.y + threadIdx.y;

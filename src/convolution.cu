@@ -26,7 +26,7 @@ void check(cudaError_t err, const char* const func, const char* const file,
     int outputRow = blockIdx.y * blockDim.y + threadIdx.y;
 
     int sum = 0;
-
+if (outputCol < outputWidth && outputRow < outputLength){
     for (int filterRow = 0; filterRow < filterHeight; filterRow++)
     {
         for(int filterCol = 0; filterCol < filterWidth; filterCol++)
@@ -47,7 +47,9 @@ void check(cudaError_t err, const char* const func, const char* const file,
     }
 
     output[outputRow * outputWidth + outputCol] = sum;
+    }
 }
+
 
 
 int main(){
